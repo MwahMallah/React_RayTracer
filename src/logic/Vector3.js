@@ -16,4 +16,12 @@ export default class Vector3 {
     minus(other) {
         return new Vector3(this.x - other.x, this.y - other.y, this.z - other.z)
     }
+
+    dot(other) {
+        return this.x * other.x + this.y * other.y + this.z * other.z;
+    }
+
+    length() {
+        return Math.sqrt(this.dot(this));
+    }
 }

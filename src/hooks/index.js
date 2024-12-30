@@ -23,6 +23,61 @@ export function useDraw({plane, camera, width, height}) {
         return p;
     }
 
+    function getPixelColor(ray) {
+        const intersections = [];
+        const a = 1;
+
+        for (const sphere of spheres) {    
+            const ray2sphere = camera.pos.minus(sphere.pos);                                        
+            const b = 2 * ray2sphere.dot(ray.scale(1 / (ray.length())));
+            const c = ray2sphere.length() ** 2 - sphere.radius ** 2;
+
+            const discr = b ** 2 - 4 * a * c;
+
+            if (discr === 0) {
+                const t = -b / (2 * a);
+                if (t < 0) 
+                    continue;
+
+                intersections.push({t, color: {
+                    r: sphere.r * 255,
+                    g: sphere.g * 255, 
+                    b: sphere.b * 255
+                }});   
+            } else if (discr > 0) {
+                const discrSqr = Math.sqrt(discr);
+                const t1 = (-b + discrSqr) / (2 * a);
+                const t2 = (-b - discrSqr) / (2 * a);
+
+                if (t1 > 0) {
+                    intersections.push({t: t1, color: {
+                        r: sphere.r * 255,
+                        g: sphere.g * 255, 
+                        b: sphere.b * 255
+                    }});
+                }
+
+                if (t2 > 0) {
+                    intersections.push({t: t2, color: {
+                        r: sphere.r * 255,
+                        g: sphere.g * 255, 
+                        b: sphere.b * 255
+                    }});
+                }
+            }
+        }
+
+        if (intersections.length === 0)
+            return {r: 0, g: 0, b: 0};
+
+        const nearest = intersections.reduce((closest, current) =>
+            current.t < closest.t ? current : closest
+        );
+
+        console.log(intersections);
+        return nearest.color;
+    }
+
     function draw() {
         const pixels = contextRef.current.getImageData(0, 0, width, height);
 
@@ -31,13 +86,8 @@ export function useDraw({plane, camera, width, height}) {
                 const pos = getPosition(x, y);
                 const ray = pos.minus(camera.pos);
 
-                putPixel(
-                    pixels, x, y, {
-                        r: (ray.x + 1) * 128,
-                        g: (ray.y + 1) * 128,
-                        b: 128
-                    }
-                );
+                const color = getPixelColor(ray);
+                putPixel(pixels, x, y, color);
             }
         }
 
@@ -46,9 +96,12 @@ export function useDraw({plane, camera, width, height}) {
 
     useEffect(() => {
         setSpheres([
-            new Sphere(0, 0, -3, 2, [1, 0, 0]), 
-            new Sphere(0, 1, -2, 0.5, [0, 1, 0]), 
-            new Sphere(-1, 0, -3, 1, [0, 0, 1])
+            // red
+            new Sphere(0, 0, 20, 2, [1, 0, 0]), 
+            // green
+            new Sphere(0, 3, 13, 2, [0, 1, 0]), 
+            // blue
+            new Sphere(-3, 0, 5, 2, [0, 0, 1])
         ]);
     }, []);
 
